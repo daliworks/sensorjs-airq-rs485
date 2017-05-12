@@ -219,6 +219,7 @@ function kickSensorReader() {
     return;
   }
 
+  /*
   fs.readFile('/proc/meminfo', 'utf8', function(err, data) {
     var lines;
     var filteredLines;
@@ -251,6 +252,7 @@ function kickSensorReader() {
       ts: (new Date()).getTime()
     };
   });
+  */
 
   logger.info('Number of devices:', numDev);
   logger.info('It is scheduled after %d seconds to restart reading sensor value',
