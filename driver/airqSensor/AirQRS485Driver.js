@@ -17,9 +17,11 @@ var devIds = [];
 var sensorValues = {
   co2:{},
   temperature:{},
-  humidity:{},
-  number:null
+  //humidity:{},
+  //number:null
+  humidity:{}
 };
+
 // ex)
 // {
 //  co2: {
@@ -56,7 +58,7 @@ var sensorValues = {
 
 // logger가 set 되기 전에 호출되는 경우 오류 방지
 if (!logger.info || typeof logger.info !== 'function' ) {
-  logger.info = function(){};
+  logger.info = function() {};
 }
 
 exports.setLogger = function(l) {
@@ -65,7 +67,7 @@ exports.setLogger = function(l) {
 
 exports.addDevice = function(deviceAddress) {
   if (devIds.indexOf(deviceAddress) < 0) {
-    logger.info('장치 추가됨:', deviceAddress);
+    logger.info('Device is added:', deviceAddress);
     devIds.push(deviceAddress);
   }
 };
@@ -77,6 +79,7 @@ exports.addDevice = function(deviceAddress) {
  *  Periodically 실행이 요구되는 작업을 여기서 처리해 주어도 무방함.
  */
 exports.getSensorValue = function(deviceAddress, sensorType) {
+  var sensorValueValidTimeLimit;
 
   if (sensorType === 'number') {
     return sensorValues[sensorType];
@@ -88,21 +91,26 @@ exports.getSensorValue = function(deviceAddress, sensorType) {
   }
 
   // 지정한 센서의 감지 시간이 120초 이내인 경우에만 유효함.
-  var sensorValueValidTimeLimit = (new Date()).getTime() - (1000 * 120);
+  sensorValueValidTimeLimit = (new Date()).getTime() - (1000 * 120);
   if (sensorValues[sensorType][deviceAddress].ts > sensorValueValidTimeLimit) {
     return sensorValues[sensorType][deviceAddress];
   }
+
   return null;
 };
 
 function printValues(values) {
   var items = [];
+  var logStr;
+
   for (var key in values) {
-    if (['co2','temperature','humidity','number'].indexOf(key) >= 0) {
-      items.push(key+':'+values[key].value+'('+values[key].ts+')');
+    //if (['co2','temperature','humidity','number'].indexOf(key) >= 0) {
+    if (['co2', 'temperature', 'humidity'].indexOf(key) >= 0) {
+      items.push(key + ':' + values[key].value + '(' + values[key].ts + ')');
     }
   }
-  var logStr = items.join(', ');
+
+  logStr = items.join(', ');
   logger.info(logStr);
 }
 
@@ -111,8 +119,8 @@ function readSensors(deviceId) {
   var isInvalidDeviceAddress = (/[^0-9]/.test(deviceId) || Number(deviceId) < 1 || Number(deviceId) > 255);
 
   if (isInvalidDeviceAddress) {
-    logger.warn('DeviceId는 RS485 SLAVE_ID로 사용되므로 반드시 1~255 숫자를 사용해야 함');
-    logger.warn('센서값을 읽을 수 없음');
+    logger.warn('Device ID should be 1 ~ 255 because it is for RS485 slave ID.');
+    logger.warn('Cannot read the sensor value.');
     return;
   }
 
@@ -126,13 +134,13 @@ function readSensors(deviceId) {
       return;
     }
 
-    // log 출력 데이터
+    // log output data
     values.co2 = {
       value: co2.data[0],
       ts: (new Date()).getTime()
     };
 
-    // Thing+ 전달용 데이터
+    // Thing+ data to transfer
     sensorValues.co2[deviceId] = {
       value: co2.data[0],
       ts: (new Date()).getTime()
@@ -151,13 +159,13 @@ function readSensors(deviceId) {
           return;
         }
 
-        // log 출력 데이터
+        // log output data
         values.temperature = {
           value: temperature.data[0],
           ts: (new Date()).getTime()
         };
 
-        // Thing+ 전달용 데이터
+        // Thing+ data to transfer
         sensorValues.temperature[deviceId] = {
           value: temperature.data[0],
           ts: (new Date()).getTime()
@@ -176,13 +184,13 @@ function readSensors(deviceId) {
               return;
             }
 
-            // log 출력 데이터
+            // log output data
             values.humidity = {
               value: humidity.data[0],
               ts: (new Date()).getTime()
             };
 
-            // Thing+ 전달용 데이터
+            // Thing+ data to transfer
             sensorValues.humidity[deviceId] = {
               value: humidity.data[0],
               ts: (new Date()).getTime()
@@ -197,45 +205,56 @@ function readSensors(deviceId) {
 }
 
 var reserveSensorReading = function(id){
-  logger.info('Device', id, '센서 조회 시작');
+  logger.info('Device', id, 'start to read sensor value');
   client.setID(Number(id));
   readSensors(id);
 };
 
 function kickSensorReader() {
-
-  // 등록된 AirQ 센서노드가 하나도 없는 경우 10초 기다린 후 다시 조회함.
+  // Read sensor value again after waiting for 10 seconds if no registered AirQ sensor node
   var numDev = devIds.length;
+
   if (!numDev) {
     setTimeout(kickSensorReader, 10 * 1000);
     return;
   }
 
   fs.readFile('/proc/meminfo', 'utf8', function(err, data) {
+    var lines;
+    var filteredLines;
+    var line;
+    var words;
+    var freeMemory;
+
     if (err) {
       return;
     }
-    var lines = data.split('\n');
-    var filteredLines = lines.filter(function(item) {
+
+    lines = data.split('\n');
+    filteredLines = lines.filter(function(item) {
       if (item.indexOf('MemFree:') === 0) {
         return 1;
       }
+
       return 0;
     });
+
     if (filteredLines.length !== 1) {
       return;
     }
-    var line = filteredLines[0].replace(/[\s]+/g,' ');
-    var words = line.split(' ');
-    var freeMemory = Number(words[1]);
+
+    line = filteredLines[0].replace(/[\s]+/g,' ');
+    words = line.split(' ');
+    freeMemory = Number(words[1]);
     sensorValues.number = {
       value: freeMemory,
       ts: (new Date()).getTime()
     };
   });
 
-  logger.info('Device 개수:', numDev);
-  logger.info((numDev * NODE_QUERY_MAX_TIME) + '초 후에 sensor read 재시작 예약됨.');
+  logger.info('Number of devices:', numDev);
+  logger.info('It is scheduled after %d seconds to restart reading sensor value',
+              numDev * NODE_QUERY_MAX_TIME);
   setTimeout(kickSensorReader, numDev * NODE_QUERY_MAX_TIME * 1000);
 
   for (var i = 0; i < devIds.length; i++) {
@@ -248,9 +267,9 @@ function init(err) {
     logger.info('connection error:', err);
     return;
   }
+
   logger.info('Connected');
   kickSensorReader();
 }
 
-
-client.connectRTU(PORT_NAME, {baudrate: 9600}, init);
+client.connectRTU(PORT_NAME, { baudrate: 9600 }, init);

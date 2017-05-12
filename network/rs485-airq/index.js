@@ -7,12 +7,12 @@ var util = require('util');
 var _ = require('lodash');
 var async = require('async');
 
-// 1. Rename the network name 'RS485Maestro'
-function RS485Maestro(options) {
-  Network.call(this, 'rs485-maestro', options);
+// 1. Rename the network name 'RS485AirQ'
+function RS485AirQ(options) {
+  Network.call(this, 'rs485-airq', options);
 }
 
-util.inherits(RS485Maestro, Network);
+util.inherits(RS485AirQ, Network);
 
 function template(str, tokens) {
   return str && str.replace(/\{(\w+)\}/g, function (x, key) {
@@ -20,7 +20,7 @@ function template(str, tokens) {
   });
 }
 
-RS485Maestro.prototype.discover = function (networkName/*driverOrModel*/, options, cb) {
+RS485AirQ.prototype.discover = function (networkName/*driverOrModel*/, options, cb) {
   var self = this,
       founds = [],
       models,
@@ -31,7 +31,7 @@ RS485Maestro.prototype.discover = function (networkName/*driverOrModel*/, option
     options = undefined;
   }
 
-  if (networkName !== 'rs485-maestro') {
+  if (networkName !== 'rs485-airq') {
     return;
   }
 
@@ -43,7 +43,7 @@ RS485Maestro.prototype.discover = function (networkName/*driverOrModel*/, option
   var device = new Device(
     self/*network*/,
     '1'/*address*/,
-    'maestro'/*modelId*/,
+    'airq'/*modelId*/,
     [
       { 
         id: sensorIdCo2,
@@ -73,4 +73,4 @@ RS485Maestro.prototype.discover = function (networkName/*driverOrModel*/, option
   return cb && cb(error,founds);
 };
 
-module.exports = new RS485Maestro();
+module.exports = new RS485AirQ();

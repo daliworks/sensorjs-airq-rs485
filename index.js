@@ -14,16 +14,16 @@ function initDrivers() {
 function initNetworks() {
   var customNetwork;
   try {
-    customNetwork = require('./network/rs485-maestro');
+    customNetwork = require('./network/rs485-airq');
   } catch (e) { }
 
   return {
-    'rs485-maestro': customNetwork
+    'rs485-airq': customNetwork
   };
 }
 
 module.exports = {
-  networks: ['rs485-maestro'],
+  networks: ['rs485-airq'],
   drivers: {
     airqSensor: [
       'airqTemp',

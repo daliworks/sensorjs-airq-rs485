@@ -22,12 +22,13 @@ function AirqSensor(sensorInfo, options) {
 }
 
 AirqSensor.properties = {
-  supportedNetworks: ['rs485-maestro'],
+  supportedNetworks: ['rs485-airq'],
   dataTypes: {
     airqCo2: ['co2'],
     airqTemp: ['temperature'],
-    airqHumi: ['humidity'],
-    airqFreemem: ['number']
+    airqHumi: ['humidity']
+    //airqHumi: ['humidity'],
+    //airqFreemem: ['number']
   },
   discoverable: false,
   addressable: true,
@@ -35,12 +36,12 @@ AirqSensor.properties = {
   maxInstances: 5,
   maxRetries: 8,
   idTemplate: '{model}-{address}',
-  models: ['airqCo2','airqTemp','airqHumi','number'],
+  //models: ['airqCo2','airqTemp','airqHumi','number'],
+  models: ['airqCo2', 'airqTemp', 'airqHumi'],
   category: 'sensor'
 };
 
 util.inherits(AirqSensor, Sensor);
-
 
 // When the 'get' method of created sensor instance is called.
 AirqSensor.prototype._get = function (cb) {
@@ -53,16 +54,16 @@ AirqSensor.prototype._get = function (cb) {
 
   var type = AirqSensor.properties.dataTypes[self.model][0];
   logger.info('AirqSensor.prototype._get() - type:', type, 'deviceAddress:', deviceAddress);
-  var objValue = AirQRS485Driver.getSensorValue(deviceAddress,type);
+  var objValue = AirQRS485Driver.getSensorValue(deviceAddress, type);
   if (objValue) {
     var data = objValue.value;
-    if (['temperature','humidity'].indexOf(type) >= 0) {
+    if (['temperature', 'humidity'].indexOf(type) >= 0) {
       data = data/10;
     }
-    rtn = { status: 'ok', id : self.id, result: {} };
+    rtn = { status: 'ok', id: self.id, result: {} };
     rtn.result[type] = data;
   } else {
-    rtn = { status: 'error', id : self.id, message: 'sensor is not ready yet' };
+    rtn = { status: 'error', id: self.id, message: 'sensor is not ready yet' };
   }
 
   if (cb) {
@@ -89,6 +90,4 @@ AirqSensor.prototype._clear = function () {
   return;
 };
 
-
 module.exports = AirqSensor;
-
