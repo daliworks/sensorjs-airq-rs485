@@ -1,0 +1,17 @@
+{
+  "name": "sensorjs-rs485-maestro",
+  "description": "rs485 network driver for the maestro gateway",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "mips"
+  ],
+  "dependencies": {
+    "async": "1.5.2",
+    "lodash": "2.4.1",
+    "modbus-serial": "5.2.6"
+  },
+  "licenses": [
+  ]
+}
