@@ -125,12 +125,12 @@ function readSensors(deviceId) {
   }
 
   // 1. CO2 read
-  logger.info(deviceId, 'CO2 read');
+  logger.debug(deviceId, 'CO2 read');
   client.readHoldingRegisters(GET_CO2, 1, function(err, co2) {
-    logger.info(deviceId, 'CO2 end');
+    logger.debug(deviceId, 'CO2 end');
     if (err) {
-      logger.info('ERROR - CO2 read error');
-      logger.info(err);
+      logger.debug('ERROR - CO2 read error');
+      logger.debug(err);
       return;
     }
 
@@ -149,12 +149,12 @@ function readSensors(deviceId) {
     setTimeout(function readTempSensor() {
 
       // 2. Temperature read
-      logger.info(deviceId, 'Temperature read');
+      logger.debug(deviceId, 'Temperature read');
       client.readHoldingRegisters(GET_TEMPERATURE, 1, function(err, temperature) {
-        logger.info(deviceId, 'Temperature end');
+        logger.debug(deviceId, 'Temperature end');
         if (err) {
-          logger.info('ERROR - Temperature read error');
-          logger.info(err);
+          logger.debug('ERROR - Temperature read error');
+          logger.debug(err);
           printValues(values);
           return;
         }
@@ -174,12 +174,12 @@ function readSensors(deviceId) {
         setTimeout(function readHumiSensor() {
 
           // 3. Humidity read
-          logger.info(deviceId, 'Humidity read');
+          logger.debug(deviceId, 'Humidity read');
           client.readHoldingRegisters(GET_HUMIDITY, 1, function(err, humidity) {
-            logger.info(deviceId, 'Humidity end');
+            logger.debug(deviceId, 'Humidity end');
             if (err) {
-              logger.info('ERROR - Humidity read error');
-              logger.info(err);
+              logger.debug('ERROR - Humidity read error');
+              logger.debug(err);
               printValues(values);
               return;
             }
@@ -205,7 +205,7 @@ function readSensors(deviceId) {
 }
 
 var reserveSensorReading = function(id){
-  logger.info('Device', id, 'start to read sensor value');
+  logger.debug('Device', id, 'start to read sensor value');
   client.setID(Number(id));
   readSensors(id);
 };
@@ -254,8 +254,8 @@ function kickSensorReader() {
   });
   */
 
-  logger.info('Number of devices:', numDev);
-  logger.info('It is scheduled after %d seconds to restart reading sensor value',
+  logger.debug('Number of devices:', numDev);
+  logger.debug('It is scheduled after %d seconds to restart reading sensor value',
               numDev * NODE_QUERY_MAX_TIME);
   setTimeout(kickSensorReader, numDev * NODE_QUERY_MAX_TIME * 1000);
 
